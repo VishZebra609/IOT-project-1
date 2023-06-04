@@ -1,0 +1,121 @@
+// Library for WiFi functionality and for accessing MQTT server
+#include <ESP8266WiFi.h> //for accessing WiFi through NodeMCU module 
+#include <PubSubClient.h>// for acesssing MQTT server
+#define Relay1 D6 // Relay connected in pin D6 of Node MCU
+#define brness //variabele for brightness of led 
+//SSid and Password of Your main Network
+const char* ssid = "Ssid of the network"; 
+const char* password = "Your Network password";
+// MQTT Server specification
+const char* mqtt_server = "MQTT-Server name"; 
+const char* username = "MQTT-Username";
+const char* pass = "MQTT-server Password";
+#define sub1 "ledonoff" // Variable for led ON/OFF functionality
+#define sub2 "ledbrness" // Variable for Brightness of LED light
+WiFiClient espClient; 
+PubSubClient client(espClient);
+unsigned long lastMsg = 0;
+#define MSG_BUFFER_SIZE (50) // Variable for msg size spec.
+char msg[MSG_BUFFER_SIZE];
+int value = 0;
+// Function for setting up wifi in NodeMCU
+void setup_wifi() 
+{
+
+  delay(20);
+  Serial.println();
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+
+while (WiFi.status() != WL_CONNECTED) 
+{
+    delay(500);
+    Serial.print(".");
+  }
+
+  randomSeed(micros());
+
+  Serial.println(" ");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+}
+// Call back function to create and compile the message received
+void callback(char* topic, byte* payload, unsigned int length) 
+{
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+
+  if (strstr(topic, sub1))
+  {
+    for (int i = 0; i < length; i++) 
+    {
+      Serial.print((char)payload[i]);
+    }
+    Serial.println();
+    // Switch on the LED if an 1 was received as first character
+    if ((char)payload[0] == '1') 
+    {
+      digitalWrite(Relay1, HIGH); 
+      // Turn the LED on (Note that LOW is the voltage level
+      // but actually the LED is on; this is because
+      // it is active low on the ESP-01)
+    }
+    else 
+    {
+      digitalWrite(Relay1, LOW);  // Turn the LED off by making the voltage LOW
+    }
+  }
+else
+  {
+    Serial.println("unsubscribed topic");
+  }
+}
+void reconnect() 
+{
+  // Loop until we're reconnected
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    // Create a random client ID
+    String clientId = "ESP8266Client-";
+    clientId += String(random(0xffff), HEX);
+    // Attempt to connect
+    if (client.connect(clientId.c_str(), username, pass) ) 
+    {
+      Serial.println("connected");
+      // Once connected, publish an announcement...
+      // ... and resubscribe
+      client.subscribe(sub1);
+    
+} 
+else 
+{
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(5000);
+    }
+  }
+}
+
+void setup() 
+{
+  pinMode(Relay1,OUTPUT);
+  Serial.begin(9600);
+  setup_wifi();
+  client.setServer(mqtt_server,15080);
+  client.setCallback(callback);
+}
+
+void loop() 
+{
+   if (!client.connected()) 
+  {
+    reconnect();
+  }
+client.loop();
+}
