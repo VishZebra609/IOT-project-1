@@ -12,5 +12,6 @@ My first IOT project for Long distance Remote Motor and Light Controlling and Te
 3. Jumper Wires
 4. Breadboard
 5. Small 6V DC Motor (Optional)
-6. Cellphone/Laptop which has access to Same internet connection as the NodeMCU board.
-7. Arduino IOT Dashboard App (Mobile)/WEB application (Laptop)
+6. DHT11 / DHT22 Tempreature and Humidity sensor
+7. Cellphone/Laptop which has access to Same internet connection as the NodeMCU board.
+8. Arduino IOT Dashboard App (Mobile)/WEB application (Laptop)
